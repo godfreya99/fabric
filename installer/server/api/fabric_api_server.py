@@ -40,11 +40,9 @@ def server_error(e):
 api_keys = resources.read_text("installer.server.api", "fabric_api_keys.json")
 valid_tokens = json.loads(api_keys)
 
-
 # Read users from the users.json file
 users = resources.read_text("installer.server.api", "users.json")
 users = json.loads(users)
-
 
 # The function to check if the token is valid
 def auth_required(f):
@@ -229,11 +227,9 @@ def register():
     }
 
     users[username] = new_user
+    token = jwt.encode({"username": username}, os.getenv("JWT_SECRET_KEY"), algorithm="HS256")
 
-    token = jwt.encode({"username": username}, os.getenv("JWT_SECRET"), algorithm="HS256")
-
-    return jsonify({"token": token.decode("utf-8")})
-
+    return jsonify({"token": token}), 200
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -246,15 +242,13 @@ def login():
         # Generate a JWT token
         token = jwt.encode({"username": username}, os.getenv("JWT_SECRET_KEY"), algorithm="HS256")
 
-        return jsonify({"token": token.decode("utf-8")})
+        return jsonify({"token": token}), 200
 
     return jsonify({"error": "Invalid username or password"}), 401
-
 
 def main():
     """Runs the main fabric API backend server"""
     app.run(host="0.0.0.0", port=13337, debug=True)
-
 
 if __name__ == "__main__":
     main()
