@@ -1,0 +1,34 @@
+services:
+  fabric-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fabric-ai-image
+    container_name: fabric-ai
+    ports:
+      - "13338:13338"
+      - "13337:13337"
+    volumes:
+      - fabric-ai-app:/home/appuser/app
+      - fabric-ai-root:/root
+      - fabric-ai-usr:/usr
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    networks:
+      - fabric-ai-network
+
+volumes:
+  fabric-ai-app:
+    name: fabric-ai-app
+    external: true
+  fabric-ai-root:
+    name: fabric-ai-root
+    external: true
+  fabric-ai-usr:
+    name: fabric-ai-usr
+    external: true
+
+networks:
+  fabric-ai-network:
+    name: fabric-ai

@@ -9,8 +9,10 @@ import os
 from dotenv import load_dotenv
 from importlib import resources
 
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
 @app.errorhandler(404)
 def not_found(e):
@@ -19,7 +21,6 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return jsonify({"error": "An internal server error occurred."}), 500
-
 
 ##################################################
 ##################################################
@@ -243,7 +244,7 @@ def login():
 
     if username in users and users[username]["password"] == password:
         # Generate a JWT token
-        token = jwt.encode({"username": username}, os.getenv("JWT_SECRET"), algorithm="HS256")
+        token = jwt.encode({"username": username}, os.getenv("JWT_SECRET_KEY"), algorithm="HS256")
 
         return jsonify({"token": token.decode("utf-8")})
 
@@ -252,7 +253,7 @@ def login():
 
 def main():
     """Runs the main fabric API backend server"""
-    app.run(host="127.0.0.1", port=13337, debug=True)
+    app.run(host="0.0.0.0", port=13337, debug=True)
 
 
 if __name__ == "__main__":

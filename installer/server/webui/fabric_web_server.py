@@ -3,6 +3,11 @@ import requests
 import json
 from flask import send_from_directory
 import os
+from dotenv import load_dotenv
+import logging
+
+# Set up basic logging
+logging.basicConfig(level=logging.DEBUG)
 
 ##################################################
 ##################################################
@@ -14,6 +19,8 @@ import os
 ##################################################
 ##################################################
 
+# Set up basic logging
+logging.basicConfig(level=logging.DEBUG)
 
 def send_request(prompt, endpoint):
     """    Send a request to the specified endpoint of an HTTP-only server.
@@ -46,11 +53,34 @@ def send_request(prompt, endpoint):
     except requests.HTTPError as e:
         return f"Error: An HTTP error occurred: {str(e)}"
 
-
+load_dotenv(os.path.join(os.path.dirname(__file__), '../api/.env'))
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        login_data = {"username": username, "password": password}
+
+        logging.debug(f"Login attempt with username: {username}")
+
+        response = requests.post("http://127.0.0.1:13337/login", json=login_data)
+        
+        if response.status_code == 200:
+            token = response.json().get("token")
+            logging.debug(f"Login successful, token received: {token}")
+            session["token"] = token
+            logging.debug(f"Session token set: {session.get('token')}")
+            return redirect(url_for("index"))
+        else:
+            logging.debug(f"Login failed with status code: {response.status_code}")
+            flash("Login failed. Please check your username and password.", "error")
+            return redirect(url_for("login"))
+    
+    return render_template("login.html")
 
 @app.route("/favicon.ico")
 def favicon():
@@ -69,7 +99,6 @@ def favicon():
         mimetype="image/vnd.microsoft.icon",
     )
 
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     """    Process the POST request and send a request to the specified API endpoint.
@@ -77,6 +106,9 @@ def index():
     Returns:
         str: The rendered HTML template with the response data.
     """
+    if "token" not in session:
+        logging.debug("No session token found, redirecting to login page.")
+        return redirect(url_for("login"))
 
     if request.method == "POST":
         prompt = request.form.get("prompt")
@@ -85,10 +117,8 @@ def index():
         return render_template("index.html", response=response)
     return render_template("index.html", response=None)
 
-
 def main():
-    app.run(host="127.0.0.1", port=13338, debug=True)
-
+    app.run(host="0.0.0.0", port=13338, debug=True)
 
 if __name__ == "__main__":
     main()
