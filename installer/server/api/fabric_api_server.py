@@ -34,8 +34,6 @@ def server_error(e):
 
 ## Setup
 
-## Did I mention this is HTTP only? Don't run this on the public internet.
-
 # Read API tokens from the apikeys.json file
 api_keys = resources.read_text("installer.server.api", "fabric_api_keys.json")
 valid_tokens = json.loads(api_keys)
